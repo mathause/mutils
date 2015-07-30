@@ -4,12 +4,8 @@
 #Author: Mathias Hauser
 #Date: 07.2015
 
-
-
 import numpy as np
-
 from numpy import deg2rad as _d2r
-
 
 def rgpot_daily_mean(lats, solar_constant=1366.):
     """
@@ -26,8 +22,6 @@ def rgpot_daily_mean(lats, solar_constant=1366.):
     -------
     out : ndarray
         n_lats x 365 days
-
-
 
     Notes
     -----
@@ -110,32 +104,6 @@ def rgpot(lat, lon, solar_constant=1366.):
 def NormCosWgt(lat):
     """Returns cosine-weighted latitude"""
     return np.cos(_d2r(lat))
-
-
-def spec_hum_2_mixing_ratio(p_surface, q_surface):
-    """
-    convert specific humidity to water vapor mixing ratio (partial pressure)
-
-    Parameters
-    ----------
-    p_surface : ndarray
-        surface pressure in [Pa]
-    q_surface : ndarray
-        surface specific humidity [kg/kg]
-
-    Returns
-    -------
-    mixing_ratio : ndarray
-        water vapor mixing ratio [Pa]
-
-    """
-
-    # epsilon = Mw/Md (molar masses of air)
-    epsilon = 0.622
-
-    # water vapor pressure [Pa] 
-    return p_surface * q_surface / epsilon
-
 
 
 def get_csi(LWdown, T, e, e_ad=0.22, k=0.47, return_all=False):
