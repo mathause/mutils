@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='mutils',
-      version='0.1',
+      version='0.1.0',
       description="Mathias' utils",
       url='',
       author='Mathias Hauser',
