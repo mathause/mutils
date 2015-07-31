@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v0.2.0
+------
+ - water_vapour module
+ - various conversion function for water vapor in the atmosphere
+ - some tests for water vapor module
 
 v0.1.0
 ------
