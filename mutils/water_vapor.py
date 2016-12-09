@@ -32,13 +32,35 @@ M_w = 18  # g mole**-1
 # Mw/Md (molar masses of air)
 epsilon = 0.622
 
+# specific heat of air at constant pressure
+c_p_air = 1.012 # J / (g * K) (room conditions)
+
+# latent heat of vaporization
+latent_heat = 2.26 # MJ / kg 
+
+# =============================================================================
 
 def _check_T_bound(T):
-    T = np.asarray(T)
-    if np.any(T <= 0.):
+    # T = np.asarray(T)
+    if np.any(T <= 150.):
         raise ValueError('Temperature must be in K')
     return T
 
+# =============================================================================
+
+def psychrometric_const(P=102.425):
+    """
+
+    Returns
+    -------
+    psi : ndarray
+        psychrometric const []
+
+    """
+
+
+    return c_p_air * 10**-3 * P / (latent_heat * epsilon)
+    
 
 def virtual_temp(T, q_v):
     """
@@ -57,6 +79,8 @@ def virtual_temp(T, q_v):
     """
     T = _check_T_bound(T)
     return T * (1 + 0.608 * q_v)
+
+# =============================================================================
 
 
 def e_2_rho_v(e, T):
@@ -78,6 +102,8 @@ def e_2_rho_v(e, T):
     T = _check_T_bound(T)
     return e / (R_v * T)
 
+# =============================================================================
+
 
 def rho_v_2_e(rho_v, T):
     """
@@ -97,6 +123,8 @@ def rho_v_2_e(rho_v, T):
     """
     T = _check_T_bound(T)
     return R_v * rho_v * T
+
+# =============================================================================
 
 
 def e_2_q_v(e, p):
@@ -121,6 +149,8 @@ def e_2_q_v(e, p):
     """
     return epsilon * e / p
 
+# =============================================================================
+
 
 def q_v_2_e(q_v, p):
     """
@@ -143,6 +173,8 @@ def q_v_2_e(q_v, p):
     :math: q_v = frac{epsilon*e}{p - e + epsilon * e}
     """
     return p * q_v / epsilon
+
+# =============================================================================
 
 
 def e_2_w_v(e, p):
@@ -167,6 +199,8 @@ def e_2_w_v(e, p):
     """
     return epsilon * e / p
 
+# =============================================================================
+
 
 def w_v_2_e(w_v, p):
     """
@@ -189,6 +223,8 @@ def w_v_2_e(w_v, p):
    :math: w_v = frac{epsilon*e}{p - e}
     """
     return p * w_v / epsilon
+
+# =============================================================================
 
 
 def e_2_rel_hum(e, T, freezing_point=273.15):
@@ -216,6 +252,8 @@ def e_2_rel_hum(e, T, freezing_point=273.15):
     e_s = saturation_vapor_pressure(T, freezing_point)
     return e / e_s
 
+# =============================================================================
+
 
 def rel_hum_2_e(RH, T, freezing_point=273.15):
     """
@@ -242,6 +280,44 @@ def rel_hum_2_e(RH, T, freezing_point=273.15):
     e_s = saturation_vapor_pressure(T, freezing_point)
     return RH * e_s
 
+# =============================================================================
+
+
+def slope_saturation_vapour_pressure(T):
+    """
+    slope of saturation vapour pressure
+
+    Parameters
+    ----------
+    T : ndarray
+        temperture [K]
+
+    Returns
+    -------
+    s : ndarray
+        slope of the relationship between saturation vapour pressure and air
+        temperature [kPa °C-1]
+
+    Note
+    ----
+    http://agsys.cra-cin.it/tools/evapotranspiration/help/Slope_of_saturation_vapour_pressure_curve.html
+    Tetens, 1930; Murray, 1967
+    """
+
+    T = _check_T_bound(T)
+
+    # the formula is in °C
+    T_C = T.copy() - 273.15
+
+    dividend = 4098 * (0.6108 * np.exp((17.27 * T_C) / (T_C + 237.3) ))
+    divisor = (T_C + 237.3) ** 2
+
+    s = dividend / divisor
+
+    return s
+
+# =============================================================================
+
 
 def saturation_vapor_pressure(T, freezing_point=273.15):
     """
@@ -259,7 +335,7 @@ def saturation_vapor_pressure(T, freezing_point=273.15):
     e_s : ndarray
         saturation vapor pressure over water/ ice
     """
-    T = np.asarray(T)
+    T = _check_T_bound(T)
 
     e_s = np.zeros_like(T, dtype=np.float64)
 
@@ -269,6 +345,8 @@ def saturation_vapor_pressure(T, freezing_point=273.15):
     e_s[~sel] = _mk_sat_vap_p_water(T[~sel])
 
     return e_s
+
+# =============================================================================
 
 
 def _mk_sat_vap_p_ice(T):
@@ -295,6 +373,7 @@ def _mk_sat_vap_p_ice(T):
 
     return e_s_i
 
+# =============================================================================
 
 def _mk_sat_vap_p_water(T):
     """

@@ -1,6 +1,14 @@
 Changelog
 =========
 
+
+v0.3.0
+------
+ - add xray and additional xray functions
+ - plot: add get_months
+ - water_vapour: better T bounds check
+ - water_vapour: add psychrometric_const
+
 v0.2.0
 ------
  - water_vapour module
