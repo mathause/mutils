@@ -241,7 +241,7 @@ def set_font_size(obj, font_size=8):
 
         leg = []
         if ax.legend_ is not None:
-            leg = ax.legend_.texts
+            leg = ax.legend_.texts + [ax.legend_.get_title()]
 
         suptitle = []
         if ax.get_figure()._suptitle is not None:
@@ -527,6 +527,89 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
 
 cmap_orog = truncate_colormap(plt.get_cmap('gist_earth'), 0.33)
 
+
+# -----------------------------------------------------------------------------
+
+
+class xlabel_at(object):
+    """
+    draw an xlabel at a arbitrary x position
+    
+    Example
+    -------
+    f, axes = plt.subplots()
+    ax = axes
+    ax.plot([0, 2], [0, 5])
+    cid = f.canvas.mpl_connect('draw_event', xlabel_at(ax, 0.5, 'label'))
+    ax.set_xlabel('real label')
+    """
+
+    def __init__(self, ax, xpos, text):
+        """
+ 
+        Parameters
+        ----------
+        ax: matplotlib axes
+            The axes to add the xlabel.
+        xpos : float
+            The position of the center of the xlabel in data coordinates.
+        text : string
+            The displayed text.
+    
+        """
+
+        super(xlabel_at, self).__init__()
+        
+        self.ax = ax
+        self.xpos = xpos
+        self.text = text        
+        
+        self.f = ax.get_figure()
+
+        # convert xpos to axes fraction
+        self.xpos_transAxes = self._xpos_to_transAxes()
+        
+        
+        xpos = self.xpos_transAxes
+        ypos = self._get_label_position_transAxes()
+        
+        # add the annotation
+        self.t = self.ax.annotate(self.text, xy=(xpos, ypos),
+                                  xycoords='axes fraction',
+                                  annotation_clip=False,
+                                  va='top', ha='center')
+
+    def __call__(self, event=None):
+        # is called when a draw_event is triggered
+        self._move_textbox()
+        
+    def _xpos_to_transAxes(self):
+        # convert transData to transAxes
+        xpos = self.ax.transData.transform([self.xpos, 0])
+        return self.ax.transAxes.inverted().transform(xpos)[0]
+    
+    def _get_label_position_transAxes(self):
+        # get position of 'real' xlabel in Axes coordinate system
+    
+        # get the current coordinate system of text (can change)
+        transLabel = self.ax.xaxis.label.get_transform()
+        # get position
+        pos = self.ax.xaxis.label.get_position()
+        
+        # convert to Axes coordinate system
+        pos = transLabel.transform(pos)
+        return self.ax.transAxes.inverted().transform(pos)[1]
+    
+    
+    def _move_textbox(self):
+        plt.draw()
+        xpos = self.xpos_transAxes
+        ypos = self._get_label_position_transAxes()
+    
+        self.t.set_transform(self.ax.transAxes)
+        self.t.set_position((xpos, ypos))
+        
+        return False
 
 
 
