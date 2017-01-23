@@ -205,6 +205,11 @@ def legend(*args, **kwargs):
         axis to add legend to
     **kwargs ; keyword args
         see matplotlib legend help
+
+    Returns
+    -------
+    legend : handle
+        Legend handle.
     """
 
     ax = kwargs.pop('ax', plt.gca())
@@ -220,6 +225,7 @@ def legend(*args, **kwargs):
     rect.set_facecolor(facecolor)
     rect.set_linewidth(linewidth)
 
+    return legend
 
 # ----------------------------------------------------------------------
 
