@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 
 #Author: Mathias Hauser
-#Date: 
+#Date:
 
 
-
-def pcolormesh(ax, data, lat, lon, trans=ccrs.PlateCarree(), **kwargs):
+def pcolormesh(ax, data, lat, lon, trans=None, **kwargs):
     """
     plot grid on geoAxes
 
@@ -31,24 +30,16 @@ def pcolormesh(ax, data, lat, lon, trans=ccrs.PlateCarree(), **kwargs):
     """
     print("Warning: mutils.maps may deprecate")
 
+    import numpy as np
     import cartopy.crs as ccrs
+
+    if trans is None:
+        trans = ccrs.PlateCarree()
 
     lons, lats = np.meshgrid(lon, lat)
 
     data = np.ma.masked_invalid(data)
     h = ax.pcolormesh(lons, lats, data, transform=trans, **kwargs)
-    
+
     return h
-
-
-
-
-
-
-
-
-
-
-
-
 
