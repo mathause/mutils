@@ -15,6 +15,9 @@ def adjust_alpha(pval, p_FDR=0.05):
         p value controlling the false discovery rate
 
     """
+    import numpy as np
+
+    print("Warning: don't use this code: use statsmodels instead")
 
     # size of array
     n = float(pval.size)
@@ -41,14 +44,14 @@ def adjust_alpha(pval, p_FDR=0.05):
 
 # =======================================================
 
-import scipy as sp
-import scipy.stats
 
 def return_time(data):
     """
     return time as in Christoph Frei's script
 
     """
+    import scipy as sp
+
     n = data.size
     return (n + 1) / (n + 1 - sp.stats.rankdata(data))
 
