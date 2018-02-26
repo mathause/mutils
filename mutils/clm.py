@@ -29,8 +29,8 @@ _legend = legend
 # clm layers
 # ======================================================================
 
-nlevsoi = 10 
-nlevgrnd = 15 
+nlevsoi = 10
+nlevgrnd = 15
 
 _i = np.arange(1, nlevgrnd + 1)
 
@@ -48,11 +48,12 @@ thick[-1] = node[-1] - node[-2]
 # depth
 depth = np.ones_like(node)
 depth[:-1] = 0.5 * (node[:-1] + node[1:])
-depth[-1] = node[-1] + 0.5 *thick[-1]
+depth[-1] = node[-1] + 0.5 * thick[-1]
 
 depth_all = np.concatenate(([0], depth))
 
 # ----------------------------------------------------------------------
+
 
 def _plt_layers(ax, ylim, txt):
 
@@ -66,10 +67,11 @@ def _plt_layers(ax, ylim, txt):
         ax.axhline(-n, lw=1, color='0.05')
 
     # middle of layer (node)
-    ax.plot(x, -node, '.', color='r' )
+    ax.plot(x, -node, '.', color='r')
     ax.set_ylim(ylim)
     ax.set_xticks([])
     ax.set_ylabel('Depth [m]')
+
 
 def _write_node_thick_depth(ax, idx):
 
@@ -105,7 +107,7 @@ def plot_clm_layers():
     # plot all layers
     ax = plt.subplot(gs[0])
     _plt_layers(ax, [-45, 0], 10)
-    
+
     # plot layers down to 5 m
     ax = plt.subplot(gs[1])
     _plt_layers(ax, [-5, 0], 10)
@@ -129,55 +131,60 @@ def get_root_fraction(ra, rb):
 
     rf = np.ones(nlevsoi)
 
+    rf[:nlevsoi] = 0.5 * (np.exp(-ra * depth_all[:nlevsoi])
+                          + np.exp(-rb * depth_all[:nlevsoi])
+                          - np.exp(-ra * depth_all[1:nlevsoi + 1])
+                          - np.exp(-rb * depth_all[1:nlevsoi + 1]))
 
-    rf[:nlevsoi] = 0.5 * (np.exp(-ra * depth_all[:nlevsoi]) + 
-                          np.exp(-rb * depth_all[:nlevsoi]) - 
-                          np.exp(-ra * depth_all[1:nlevsoi + 1]) - 
-                          np.exp(-rb * depth_all[1:nlevsoi + 1]))
-
-
-    rf[nlevsoi - 1] = 0.5 * (np.exp(-ra * depth_all[nlevsoi - 1]) + 
-                         np.exp(-rb * depth_all[nlevsoi - 1])) 
+    rf[nlevsoi - 1] = 0.5 * (np.exp(-ra * depth_all[nlevsoi - 1])
+                             + np.exp(-rb * depth_all[nlevsoi - 1]))
 
     return rf
 
 
-rf1 = get_root_fraction(7, 2)
-rf2 = get_root_fraction(7, 1)
-rf3 = get_root_fraction(6, 2)
-rf4 = get_root_fraction(7, 1.5)
-rf5 = get_root_fraction(11, 2)
-rf6 = get_root_fraction(6, 3)
+def get_root_fraction_pft():
+    rf1 = get_root_fraction(7, 2)
+    rf2 = get_root_fraction(7, 1)
+    rf3 = get_root_fraction(6, 2)
+    rf4 = get_root_fraction(7, 1.5)
+    rf5 = get_root_fraction(11, 2)
+    rf6 = get_root_fraction(6, 3)
 
+    return rf1, rf2, rf3, rf4, rf5, rf6
 
 # ======================================================================
-# interpolation os SM data
+# interpolation of SM data
 # ======================================================================
 
-# define constants
 
-# use any non-leap year
-date_range = pd.date_range('2001-01-01', '2001-12-31')
+def _get_doy():
+    # define constants
 
-# month for every doy
-month = date_range.month
-# day of month for every doy
-dayofmonth = date_range.day
+    # use any non-leap year
+    date_range = pd.date_range('2001-01-01', '2001-12-31')
 
-# days per month
-ndaypm = np.array((31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
+    # month for every doy
+    month = date_range.month
+    # day of month for every doy
+    dayofmonth = date_range.day
 
-# number of days per year
-ndaypy = 365
+    # days per month
+    ndaypm = np.array((31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
 
-doy = np.arange(1, 366) + 365
+    # number of days per year
+    ndaypy = 365
 
-# doy in the middle of the month
-_a = pd.date_range('2001-01-01', '2001-12-31', freq='M').dayofyear
-_b = pd.date_range('2001-01-01', '2001-12-31', freq='MS').dayofyear
-doy_month = (_a - 1 + _b) / 2. + 365
+    doy = np.arange(1, 366) + 365
+
+    # doy in the middle of the month
+    _a = pd.date_range('2001-01-01', '2001-12-31', freq='M').dayofyear
+    _b = pd.date_range('2001-01-01', '2001-12-31', freq='MS').dayofyear
+    doy_month = (_a - 1 + _b) / 2. + 365
+
+    return date_range, month, dayofmonth, ndaypm, doy, doy_month, ndaypy
 
 # ----------------------------------------------------------------------
+
 
 def sm_weights_monthly():
     """
@@ -199,13 +206,15 @@ def sm_weights_monthly():
 
     """
 
+    __, month, dayofmonth, ndaypm, __, __, __ = _get_doy()
+
     # fractional day of month (e.g. 1. Jan = 1./31)
     t = (dayofmonth - 0.5) / ndaypm[month - 1]
 
     # are we in the first or second half of the month
     it1 = np.floor(t + 0.5)
     it2 = it1 + 1
-    
+
     # which months do we need?
     TS1 = (month + it1 - 1).astype(np.int)
     TS2 = (month + it2 - 1).astype(np.int)
@@ -216,8 +225,8 @@ def sm_weights_monthly():
 
     # calculate the weight
     tw1 = (it1 + 0.5) - t
-    tw2 = 1 -tw1
-    
+    tw2 = 1 - tw1
+
     return TS1, TS2, tw1, tw2
 
 
@@ -256,12 +265,14 @@ def plot_sm_weights_monthly():
 def _example_daily_sm():
     # construct an example SM dataset
 
+    __, __, __, __, doy, _, ndaypy = _get_doy()
+
     # low amplitude sin curve
-    SM_daily = 0.2 * np.sin(doy * ((np.pi * 2) / (ndaypy ))) +1.5
+    SM_daily = 0.2 * np.sin(doy * ((np.pi * 2) / (ndaypy))) + 1.5
 
     # add a dry period in summer
     idx = slice(150, 200)
-    SM_daily[idx] -= 0.4 * np.sin(np.arange(50) * ((np.pi * 2) / (50 *2 )))
+    SM_daily[idx] -= 0.4 * np.sin(np.arange(50) * ((np.pi * 2) / (50 * 2)))
 
     # noise
     np.random.seed(123)
@@ -271,9 +282,12 @@ def _example_daily_sm():
 
 # ----------------------------------------------------------------------
 
+
 def example_sm_weights_monthly(SM_daily=_example_daily_sm(), ax=None, 
                                legend=True):
     # show interpolation for an example sm dataset
+
+    date_range, month, dayofmonth, ndaypm, doy, doy_month, ndaypy = _get_doy()
 
     # get monthly means
     SM_monthly = pd.Series(SM_daily, date_range).resample('M').mean().values
