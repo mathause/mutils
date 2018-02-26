@@ -1,11 +1,9 @@
 Changelog
 =========
-v0.5.0 (unreleased)
+v0.4.1 (26.02.2018)
 -------------------
+- typo import version
 - add readme
-
-
-
 
 v0.4.0 (26.02.2018)
 -------------------

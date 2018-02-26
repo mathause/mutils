@@ -1,8 +1,9 @@
 # mutils - utilities for me
 
+Version: 0.4.1
 
 ## Utilities
- * clm: utils for Community Earth £system Model
+ * clm: utils for Community Earth System Model
  * meteo: potential radiation and clear-sky radiation
  * plot: utils for matplotlib and cartopy
  * stats: return time
