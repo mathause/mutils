@@ -5,7 +5,6 @@
 #Date: 
 
 
-import cartopy.crs as ccrs
 
 def pcolormesh(ax, data, lat, lon, trans=ccrs.PlateCarree(), **kwargs):
     """
@@ -30,6 +29,9 @@ def pcolormesh(ax, data, lat, lon, trans=ccrs.PlateCarree(), **kwargs):
     ..todo::
       infer dlat and dlon from the da data
     """
+    print("Warning: mutils.maps may deprecate")
+
+    import cartopy.crs as ccrs
 
     lons, lats = np.meshgrid(lon, lat)
 
