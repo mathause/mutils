@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 # get version
-with open("regionmask/version.py") as f:
+with open("mutils/version.py") as f:
     l = f.readline().strip().replace(' ', '').replace('"', '')
     version = l.split('=')[1]
 __version__ = version
