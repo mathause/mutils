@@ -1,6 +1,1 @@
-MAJOR = 0
-MINOR = 4
-MICRO = 0
-ISRELEASED = False
-VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
-QUALIFIER = ''
+version = "0.4.0"
