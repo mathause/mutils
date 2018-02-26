@@ -16,6 +16,8 @@ import numpy as np
 import string
 
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
+
 from datetime import datetime
 
 
@@ -161,7 +163,7 @@ def geoaxis_simple(gs, projection=ccrs.PlateCarree(), coastlines=True):
 # =============================================================================
 
 def get_subplots(x, y, geoaxis=True, flatten=True, 
-                 projection=ccrs.PlateCarree(), coastlines=True, 
+                 projection=ccrs.PlateCarree(), coastlines=False, 
                  **kwargs):
 
     gs = gridspec.GridSpec(x, y, **kwargs)
@@ -454,19 +456,181 @@ def add_subplot_label_edge(obj, border=5, fontsize=8, start=0,
                     bbox=bbox, 
                     ha='left', va='top')
 
+# =============================================================================
 
 
+def map_ticks(lon, lat, ax=None, left=True, right=False, bottom=True, top=False,
+              fontsize=None, direction='in'):
+    """
+    convinience for map ticks
+    
+    Parameters
+    ----------
+    lon : 1d-array
+        Locations of the longitude ticks & labels.
+    lat : 1d-array
+        Locations of the latitude ticks & labels.    
+    ax : GeoAxes object, optional
+        Axes to add the ticks to. Uses current axes if none are given.
+    left : bool, optional.
+        If True adds ticklabels on the left side. See note. Default: True.
+    right : bool, optional.
+        If True adds ticklabels on the right side. See note. Default: False.
+    bottom : bool, optional.
+        If True adds ticklabels on the bottom. See note. Default: True.
+    top : bool, optional.
+        If True adds ticklabels on the left side. See note. Default: False.
+    fontsize : int, optional
+        If given set fontsize. Default: None.
+    direction: 'in' | 'out' | 'inout', optional
+        The direction of the ticks. Default: 'in'.
+    
+    ..note::
+
+    * It's only possible to have one of left/ right, so if both
+      are True, use the one that is not the default (i.e. right).
+      Dito for bottom/ top. If you want to have a label for both use
+      map_gridlines.
+    
+    * You cannot set the zorder of ticks (yet?)! So don't be surprised
+      if they are not shown... 
+
+
+    Mathias Hauser    
+    """    
+    
+    
+    if ax is None:
+        ax = plt.gca()
+
+    # we need to restrict lat and lon to the limits of the plot - 
+    # else the limits are changed
+    
+    # xlim = ax.get_xlim()
+    # ylim = ax.get_ylim()
+
+    # lon = lon[(lon > xlim[0]) & (lon < xlim[1])]
+    # lat = lat[(lat > ylim[0]) & (lat < ylim[1])]
+
+    extent = ax.get_extent(ccrs.PlateCarree())
+    xmin, xmax, ymin, ymax = extent
+
+    # lon = lon[(lon >= xmin) & (lon <= xmax)]
+    # lat = lat[(lat >= ymin) & (lat <= ymax)]
+
+    ax.set_xticks(lon, crs=ccrs.PlateCarree())
+    ax.set_yticks(lat, crs=ccrs.PlateCarree())
+
+    # the LONGITUDE_FORMATTER and LATITUDE_FORMATTER are actually meant for gridlines
+    # however, they make better strings than LongitudeFormatter and LatitudeFormatter
+    
+    lon_formatter = LONGITUDE_FORMATTER
+    lat_formatter = LATITUDE_FORMATTER
+    
+    lon_formatter = LongitudeFormatter()
+    lat_formatter = LatitudeFormatter()
+
+    ax.xaxis.set_major_formatter(lon_formatter)
+    ax.yaxis.set_major_formatter(lat_formatter)
+
+    # get rid of 'lat' and 'lon': relevant for xarray
+    ax.set_xlabel('')
+    ax.set_ylabel('')
+
+    # it's only possible to have one of left/ right, top/ bottom
+    # so if both are True, use the one that is not the default
+
+    if right:
+        ax.yaxis.tick_right()
+    elif left:
+        ax.yaxis.tick_left()
+    else:
+        ax.set_yticklabels('')
+        
+    if bottom:
+        ax.xaxis.tick_bottom()
+    elif top:
+        ax.xaxis.tick_top()
+    else:
+        ax.set_xticklabels('')
+        
+        
+    ax.yaxis.set_ticks_position('both')
+    ax.xaxis.set_ticks_position('both')
+
+    # well this is just my preference
+    ax.tick_params('both', direction=direction)
+
+    if fontsize:
+        plt.setp(ax.get_xticklabels(), 'fontsize', fontsize)
+        plt.setp(ax.get_yticklabels(), 'fontsize', fontsize)
+
+# =============================================================================
 
 
 def map_gridlines(ax, left=True, bottom=True, right=False, top=False, 
-                  lat=None, lon=None, format=True):
-    gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
-                      linewidth=0.5, color='0.5', linestyle='-', alpha=0.5)
+                  lat=None, lon=None, format=True, fontsize=8,
+                  lines=None, xlines=True, ylines=True,
+                  gl_kws=dict(draw_labels=True,
+                  linewidth=0.5, color='0.5', linestyle='-', alpha=0.5)):
 
-    gl.xlabel_style = {'size': 8}
-    gl.ylabel_style = {'size': 8}
+    """
+    add map gridlines
+
+    Parameters
+    ----------
+    ax : axes object
+        axes object to add gridlines to
+    left : bool, optional
+        If True, adds labels to the left of the plot. Default: True.
+    bottom : bool, optional
+        If True, adds labels to the bottom of the plot. Default: True.
+    right : bool, optional
+        If True, adds labels to the right of the plot. Default: False.
+    top : bool, optional
+        If True, adds labels to the top of the plot. Default: False.
+    lat : ndarray or None, optional
+        Position of latitude gridlines/ ticks. If None uses automatic
+        positions. Default: None
+    lon : ndarray or None, optional
+        Position of longitude gridlines/ ticks. If None uses automatic
+        positions. Default: None
+    format : bool
+        If True formats lat and lon ticks (10°N, ...), using 
+        LONGITUDE_FORMATTER, LATITUDE_FORMATTER. Default: True.
+    fontsize: int or None, optional
+        If given sets the fontsize of the labels, if None, uses rcParam.
+        Default: 8.
+    lines : None, bool , optional
+        If True, adds x and y gridlines, if False not. If None uses
+        the values of xlines and ylines. Default: None.
+    xlines : bool
+        If True, adds x gridlines, if False not. Default: True.
+    ylines : bool
+        If True, adds y gridlines, if False not. Default: True.
+    gl_kws : dict, optional
+        Style of the gridlines. See function spec for defaults.
 
 
+    ..note: 
+    * It possible to add labels to the left *and* to the right.
+
+
+    """
+
+
+
+    if lines is not None:
+        xlines = ylines = lines
+
+    gl = ax.gridlines(crs=ccrs.PlateCarree(), **gl_kws)
+
+    if fontsize is not None:
+        gl.xlabel_style = {'size': fontsize}
+        gl.ylabel_style = {'size': fontsize}
+
+    gl.xlines = xlines
+    gl.ylines = ylines
 
     gl.xlabels_top = top
     gl.xlabels_bottom = bottom
@@ -486,6 +650,8 @@ def map_gridlines(ax, left=True, bottom=True, right=False, top=False,
         #     lat = np.arange(-90, 91, lat)
         gl.ylocator = mticker.FixedLocator(lat)
 
+    return gl
+
 
 # -----------------------------------------------------------------------------
 
@@ -496,13 +662,19 @@ def hatch(x, y, z, **kwargs):
     # extend grid
     x, y = np.meshgrid(x, y)
 
+    thin = kwargs.pop('thin', False)
+
+    if thin:
+        x = x[::2, ::2]
+        y = y[::2, ::2]
+        z = z[::2, ::2]
+
     # select relevant points
     x = x.ravel()[z.ravel()]
     y = y.ravel()[z.ravel()]
-  
+
     ms = kwargs.pop('ms', 1)
     color = kwargs.pop('color', '0.25')
-
 
     ax.plot(x, y, '.', ms=ms, color=color, **kwargs)
 
@@ -536,6 +708,203 @@ cmap_orog = truncate_colormap(plt.get_cmap('gist_earth'), 0.33)
 
 # -----------------------------------------------------------------------------
 
+
+def get_map_layout(nrows, ncols, aspect, cbar_space=2.5, cbar_vertical=True, 
+                   width=17., projection=ccrs.PlateCarree(), coastlines=False,
+                        **kwargs):
+    """
+    geo-subplots with good height of figure, given the layout and aspect 
+
+    Parameters
+    ----------
+    nrows : int
+        Number of rows of the subplot grid.
+    ncols : int
+        Number of columns of the subplot grid.
+    aspect : float
+        Aspect ratio of the map plot. As a first guess, use
+         "len(lon) / lat(lat)". (Careful: integer division.)
+    cbar_space : float, optional
+        Space that the colorbar will take in cm. Default: 2.5 cm. 
+        Needs a solution, when the colorbar is horizontal.
+    cbar_vertical : bool, optional
+        If True, assumes the colorbar is vertical, if False that it is 
+        horizontal. Default: True.
+    width : float, optional
+        Width of the figure in cm. Default: 17 cm.
+    projection : cartopy projection, optional
+        Default: cartopy.crs.PlateCarree()
+    coastlines : bool, optional
+        If True adds coarse resolution coastlines. Default: False.
+
+    Returns
+    -------
+    f : figure
+        Figure handle.
+    axes : axes
+        Axes handle.
+
+    """
+
+
+    f, axes = get_subplots(nrows, ncols)
+    
+    width_inch, height_inch = _get_map_layout(nrows, ncols, aspect, cbar_space,
+                                              cbar_vertical, width)
+    
+    f.set_figwidth(width_inch)
+    f.set_figheight(height_inch)
+
+    return f, axes
+
+
+
+def _get_map_layout(nrows, ncols, aspect, cbar_space=2.5, cbar_vertical=True, 
+                    width=17.):
+
+
+
+    width_inch = width / 2.54
+    cbar_space_inch = cbar_space / 2.54
+
+    if cbar_vertical:
+        width_of_subplot = (width_inch - cbar_space_inch) / ncols
+        height_of_subplot = width_of_subplot / aspect
+        height_inch = nrows * height_of_subplot
+    else:
+        width_of_subplot = width_inch / ncols
+        height_of_subplot = width_of_subplot / aspect
+        height_inch = nrows * height_of_subplot + cbar_space_inch
+
+
+    return width_inch, height_inch
+
+# -----------------------------------------------------------------------------
+
+
+def set_map_layout_old(axes, cbar_space=2.5, cbar_vertical=True, width=17.0):
+    """
+    set figure height, given width and colorbar setting
+
+    Needs to be called after all plotting is done.
+       
+    Parameters
+    ----------
+    axes : ndarray of (Geo)Axes
+        Array with all axes of the figure.
+    cbar_space: float, optional
+        Width or height of the colorbar in cm. Default: 2.5
+    cbar_vertical : bool, optional
+        If True, assumes the colorbar is vertical, else assumes it's
+        horizontal. Default: True
+    width : float
+        Width of the full figure in cm. Default 17
+
+    ..note: currently only works if all the axes have the same aspect
+    ratio.
+    """
+
+    # calculate the width that is available for plots
+    if cbar_vertical:
+        width_plots = width - cbar_space
+    else:
+        width_plots = width
+    
+    if isinstance(axes, plt.Axes):
+        ax = axes
+    else:
+        # assumes the first of the axes is representative for all
+        ax = axes.flat[0]
+    
+    f = ax.get_figure()
+    
+    # data ratio is the aspect
+    aspect = ax.get_data_ratio()
+    print(aspect)
+
+    # get geometry tells how many subplots there are
+    n_rows, n_cols, __ = ax.get_geometry()
+    print(n_rows, n_cols)
+    
+    width_one_plot = width_plots / n_cols
+    
+    height_plots = width_one_plot * n_rows * aspect
+    
+    if cbar_vertical:
+        height = height_plots
+    else:
+        height = height_plots + cbar_space
+    
+    print(width_one_plot, height, width)
+    
+    f.set_figwidth(width / 2.54)
+    f.set_figheight(height / 2.54)
+
+# -----------------------------------------------------------------------------
+
+
+def set_map_layout(axes, width=17.0, cbar_space=None, cbar_vertical=None):
+    """
+    set figure height, given width and colorbar setting
+
+    Needs to be called after all plotting is done.
+       
+    Parameters
+    ----------
+    axes : ndarray of (Geo)Axes
+        Array with all axes of the figure.
+    width : float
+        Width of the full figure in cm. Default 17
+
+    ..note: currently only works if all the axes have the same aspect
+    ratio.
+    """
+
+    if (cbar_space is not None) or (cbar_vertical is not None):
+        msg = ("Warning: 'cbar_space' and 'cbar_vertical' is "
+               "currently ignored. Ussing 'set_map_layout_old'.")
+        print(msg)
+
+        set_map_layout_old(axes, cbar_space=cbar_space,
+                           cbar_vertical=cbar_vertical, width=width)
+        return 
+
+    if isinstance(axes, plt.Axes):
+        ax = axes
+    else:
+        # assumes the first of the axes is representative for all
+        ax = axes.flat[0]
+    
+    # read figure data
+    f = ax.get_figure()
+
+    bottom = f.subplotpars.bottom
+    top = f.subplotpars.top
+    left = f.subplotpars.left
+    right = f.subplotpars.right
+    hspace = f.subplotpars.hspace
+    wspace = f.subplotpars.wspace
+
+    # data ratio is the aspect
+    aspect = ax.get_data_ratio()
+    # get geometry tells how many subplots there are
+    nrow, ncol, __ = ax.get_geometry()
+
+
+    # width of one plot, taking into account
+    # left * wf, (1-right) * wf, ncol * wp, (1-ncol) * wp * wspace
+    wp = (width - width * (left + (1-right))) / (ncol + (ncol-1) * wspace) 
+
+    hp = wp * aspect
+
+    # height of figure
+    height = (hp * (nrow + ((nrow - 1) * hspace))) / (1. - (bottom + (1 - top)))
+
+
+    f.set_figwidth(width / 2.54)
+    f.set_figheight(height / 2.54)
+
+# -----------------------------------------------------------------------------
 
 class xlabel_at(object):
     """
