@@ -1,7 +1,9 @@
-import meteo
-import plot
-import water_vapor
-import maps
-import geo
-import clm
-import stats
+from .version import VERSION as __version__
+
+from . import meteo
+from . import plot
+from . import water_vapor
+from . import maps
+from . import geo
+from . import clm
+from . import stats
