@@ -29,23 +29,26 @@ _legend = legend
 # clm layers
 # ======================================================================
 
+# see iniTimeConst.F90
+
 nlevsoi = 10
 nlevgrnd = 15
 
 _i = np.arange(1, nlevgrnd + 1)
 
+# Soil layer thickness discretization (m)
 _fs = 0.025
 
-# node depth
+# node depth; zsoi in CLM
 node = _fs * (np.exp(0.5*(_i - 0.5)) - 1)
 
-# thickness
+# thickness; dzsoi in CLM
 thick = np.ones_like(node)
 thick[0] = 0.5 * (node[0] + node[1])
 thick[1:-1] = 0.5 * (node[2:] - node[:-2])
 thick[-1] = node[-1] - node[-2]
 
-# depth
+# depth = interface depths; zisoi in CLM
 depth = np.ones_like(node)
 depth[:-1] = 0.5 * (node[:-1] + node[1:])
 depth[-1] = node[-1] + 0.5 * thick[-1]
@@ -89,11 +92,11 @@ def _write_node_thick_depth(ax, idx):
     # numbers
     opt = dict(va='center', ha='right')
     msg = '{0:5.3f} m'
-    for ii, n in enumerate(node[idx]):
-        ax.text(0.05, -ii, '{}'.format(ii + 1), **opt)
-        ax.text(0.40, -ii, msg.format(node[ii]), **opt)
-        ax.text(0.70, -ii, msg.format(thick[ii]), **opt)
-        ax.text(1.00, -ii, msg.format(depth[ii]), **opt)
+    for ii, n in enumerate(idx):
+        ax.text(0.05, -ii, '{}'.format(n + 1), **opt)
+        ax.text(0.40, -ii, msg.format(node[n]), **opt)
+        ax.text(0.70, -ii, msg.format(thick[n]), **opt)
+        ax.text(1.00, -ii, msg.format(depth[n]), **opt)
 
     ax.set_ylim(-8, 2)
 
