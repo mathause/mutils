@@ -51,15 +51,29 @@ def _check_T_bound(T):
 def psychrometric_const(P=102.425):
     """
 
+    Parameters
+    ----------
+    p : float or ndarray
+        Atmospheric pressure in kPa.
+
+
     Returns
     -------
     psi : ndarray
-        psychrometric const []
+        psychrometric const [kPa / °C]
+
+
+    Units
+    -----
+    c_p_air:        kJ / (kg K)
+    P:              kPa
+    latent_heat:    MJ / kg
+    epsilon:        1
 
     """
 
-
-    return c_p_air * 10**-3 * P / (latent_heat * epsilon)
+    print('Warning: psi was corrected is now * 10 ** 3 (was * 10**-3)')
+    return c_p_air * 10**3 * P / (latent_heat * epsilon)
     
 
 def virtual_temp(T, q_v):
