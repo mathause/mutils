@@ -73,7 +73,7 @@ def psychrometric_const(P=102.425):
     """
 
     print('Warning: psi was corrected is now * 10 ** 3 (was * 10**-3)')
-    return c_p_air * 10**3 * P / (latent_heat * epsilon)
+    return c_p_air * 10**-3 * P / (latent_heat * epsilon)
     
 
 def virtual_temp(T, q_v):
