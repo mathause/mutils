@@ -1,6 +1,6 @@
 # mutils - utilities for me
 
-Version: 0.4.2
+Version: 0.4.4
 
 ## Utilities
  * clm: utils for Community Earth System Model
