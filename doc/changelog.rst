@@ -1,7 +1,11 @@
 Changelog
 =========
 
-v0.4.3 (11.12.2018)
+v0.4.4 (11.12.2018)
+-------------------
+- revert change to psychrometric constant - was correct after all
+
+v0.4.4 (11.12.2018)
 -------------------
 - plot_clm_layers did write the wrong layers
 - psychrometric constant had a wrong conversion factor (was 10**-3, is now 10**3)
